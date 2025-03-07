@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>橙色王朝——女神节拼图游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        #main-container {
+            display: flex;
+            align-items: flex-start;
+            z-index: 1;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #instructions {
+            width: 200px;
+            margin-right: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 2px solid #ff8c00;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        #game-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #game-container {
+            margin-top: 20px;
+            position: relative;
+            border: 2px solid #ff8c00;
+            background-color: #fff;
+        }
+        .tile {
+            position: absolute;
+            background-size: 300px 300px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #controls {
+            margin: 20px 0;
+        }
+        #timer {
+            width: 150px;
+            margin-left: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 2px solid #ff8c00;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+        }
+        #share-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            background-color: #ff8c00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e07b00;
+        }
+        #share-button {
+            background-color: #1DA1F2; /* Twitter蓝色 */
+        }
+        #share-button:hover {
+            background-color: #0c87d6;
+        }
+        select, input[type="file"] {
+            padding: 5px;
+            margin-left: 10px;
+        }
+        /* 装饰样式 */
+        .decoration {
+            position: absolute;
+            opacity: 0.7;
+            z-index: 0;
+            pointer-events: none;
+        }
+        #deco-top-left {
+            top: 10px;
+            left: 10px;
+            width: 100px;
+            height: 100px;
+            background: url('https://via.placeholder.com/100x100/ff69b4/000000?text=彩花') no-repeat;
+            background-size: contain;
+        }
+        #deco-top-right {
+            top: 10px;
+            right: 10px;
+            width: 120px;
+            height: 120px;
+            background: url('https://pbs.twimg.com/media/GjYioM4boAAZp2N?format=jpg&name=360x360') no-repeat;
+            background-size: contain;
+            animation: float 4s infinite ease-in-out;
+        }
+        #deco-bottom-left {
+            bottom: 10px;
+            left: 10px;
+            width: 100px;
+            height: 100px;
+            background: url('https://via.placeholder.com/100x100/ff4500/000000?text=彩花') no-repeat;
+            background-size: contain;
+        }
+        #deco-bottom-right {
+            bottom: 10px;
+            right: 10px;
+            width: 120px;
+            height: 120px;
+            background: url('https://pbs.twimg.com/media/GjYioM4boAAZp2N?format=jpg&name=360x360') no-repeat;
+            background-size: contain;
+            animation: float 5s infinite ease-in-out;
+        }
+        /* 漂浮动画 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰元素 -->
+    <div class="decoration" id="deco-top-left"></div>
+    <div class="decoration" id="deco-top-right"></div>
+    <div class="decoration" id="deco-bottom-left"></div>
+    <div class="decoration" id="deco-bottom-right"></div>
+
+    <div id="main-container">
+        <div id="instructions">
+            <h3>游戏说明</h3>
+            <p>欢迎体验“橙色王朝——女神节拼图游戏”！选择女神图片或上传本地图片，设置难度（3x3、4x4、5x5），点击“开始游戏”打乱拼图。点击相邻拼图块（上下左右）交换位置，还原图片即获胜。计时器会记录你的用时，胜利后可分享到Twitter！</p>
+        </div>
+        <div id="game-section">
+            <h1>橙色王朝——女神节拼图游戏</h1>
+            <div id="controls">
+                <button onclick="startGame()">开始游戏</button>
+                <label for="difficulty">难度:</label>
+                <select id="difficulty" onchange="updateDifficulty()">
+                    <option value="3">3x3 (简单)</option>
+                    <option value="4">4x4 (中等)</option>
+                    <option value="5">5x5 (困难)</option>
+                </select>
+                <label for="image-select">选择女神:</label>
+                <select id="image-select" onchange="updateImage()">
+                    <option value="images/zoe.jpg">Queen Zoe</option>
+                    <option value="images/ma.jpg">Queen Ma</option>
+                    <option value="images/megan.jpg">Queen Megan</option>
+                </select>
+                <label for="image-upload">上传图片:</label>
+                <input type="file" id="image-upload" accept="image/*" onchange="uploadImage()">
+            </div>
+            <div id="game-container"></div>
+            <div id="share-container"></div>
+        </div>
+        <div id="timer">用时: 0秒</div>
+    </div>
+
+    <script>
+        let size = 3; // 默认3x3网格
+        let tiles = [];
+        let tileSize = 100; // 每个拼图块的大小
+        const containerSize = 300; // 游戏区域大小（300x300像素）
+        let selectedTile = null; // 当前选中的拼图块
+        let currentImage = 'https://pbs.twimg.com/media/GfpbuVtbcAAN0k3?format=jpg&name=360x360'; // 默认图片
+        let timerInterval = null; // 计时器
+        let seconds = 0; // 计时秒数
+
+        function updateDifficulty() {
+            size = parseInt(document.getElementById('difficulty').value);
+            tileSize = containerSize / size;
+            initGame(); // 更新拼图布局
+        }
+
+        function updateImage() {
+            currentImage = document.getElementById('image-select').value;
+            initGame(); // 更新拼图图片
+        }
+
+        function uploadImage() {
+            const fileInput = document.getElementById('image-upload');
+            const file = fileInput.files[0];
+            if (file) {
+                currentImage = URL.createObjectURL(file); // 创建本地图片URL
+                initGame(); // 更新拼图图片
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval); // 清除旧计时器
+            seconds = 0;
+            document.getElementById('timer').textContent = `用时: ${seconds}秒`;
+            timerInterval = setInterval(() => {
+                seconds++;
+                document.getElementById('timer').textContent = `用时: ${seconds}秒`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function initGame() {
+            const container = document.getElementById('game-container');
+            container.innerHTML = '';
+            container.style.width = `${containerSize}px`;
+            container.style.height = `${containerSize}px`;
+            tiles = [];
+
+            // 创建拼图块（无空白格）
+            for (let i = 0; i < size * size; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.style.width = `${tileSize}px`;
+                tile.style.height = `${tileSize}px`;
+                tile.style.backgroundImage = `url('${currentImage}')`;
+                tile.style.backgroundPosition = `${-(i % size) * tileSize}px ${-Math.floor(i / size) * tileSize}px`;
+                tile.dataset.index = i; // 原始位置
+                container.appendChild(tile);
+                tiles.push(tile);
+            }
+
+            placeTiles(); // 初始放置拼图
+        }
+
+        function startGame() {
+            shuffleTiles();
+            placeTiles();
+            startTimer(); // 点击“开始游戏”时启动计时器
+            document.getElementById('share-container').innerHTML = ''; // 清除之前的分享按钮
+        }
+
+        function shuffleTiles() {
+            for (let i = tiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+            }
+        }
+
+        function placeTiles() {
+            tiles.forEach((tile, index) => {
+                tile.style.left = `${(index % size) * tileSize}px`;
+                tile.style.top = `${Math.floor(index / size) * tileSize}px`;
+                tile.onclick = () => selectTile(tile, index);
+            });
+        }
+
+        function selectTile(tile, index) {
+            if (!selectedTile) {
+                // 第一次点击：选中拼图块
+                selectedTile = { tile, index };
+                tile.style.border = '2px solid #ff4500'; // 高亮选中
+            } else {
+                // 第二次点击：尝试交换
+                const firstIndex = selectedTile.index;
+                const secondIndex = index;
+
+                // 检查是否相邻（上下左右）
+                const firstRow = Math.floor(firstIndex / size);
+                const firstCol = firstIndex % size;
+                const secondRow = Math.floor(secondIndex / size);
+                const secondCol = secondIndex % size;
+
+                if ((Math.abs(firstRow - secondRow) === 1 && firstCol === secondCol) ||
+                    (Math.abs(firstCol - secondCol) === 1 && firstRow === secondRow)) {
+                    // 交换位置
+                    [tiles[firstIndex], tiles[secondIndex]] = [tiles[secondIndex], tiles[firstIndex]];
+                    placeTiles(); // 先更新位置
+                    setTimeout(checkWin, 100); // 延迟检查胜利
+                }
+
+                // 取消高亮并重置选中状态
+                selectedTile.tile.style.border = '1px solid #ddd';
+                selectedTile = null;
+            }
+        }
+
+        function checkWin() {
+            for (let i = 0; i < tiles.length; i++) {
+                if (parseInt(tiles[i].dataset.index) !== i) {
+                    return;
+                }
+            }
+            stopTimer();
+            alert(`恭喜！你完成了拼图！您一共用时 ${seconds}秒`);
+            showShareButton(); // 显示分享按钮
+        }
+
+        function showShareButton() {
+            const shareContainer = document.getElementById('share-container');
+            shareContainer.innerHTML = ''; // 清空之前的内容
+            const shareButton = document.createElement('button');
+            shareButton.id = 'share-button';
+            shareButton.textContent = '分享到Twitter';
+            shareButton.onclick = () => {
+                const tweetText = `我完成了橙色王朝——女神节拼图游戏！用时${seconds}秒，快来挑战吧！`;
+                const tweetUrl = 'https://example.com'; // 替换为实际游戏链接（可选）
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
+                window.open(twitterUrl, '_blank');
+            };
+            shareContainer.appendChild(shareButton);
+        }
+
+        // 页面加载时初始化拼图
+        initGame();
+    </script>
+</body>
+</html>
